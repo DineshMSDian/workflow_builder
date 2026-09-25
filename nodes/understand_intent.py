@@ -12,7 +12,7 @@ from their message, extract:
 
 RESPOND ONLY in this JSON format:
 {
-    'user_intent': '...',
+    'user_intent': "...",
     'extracted_info': {
         'trigger_source': null,
         'trigger_event': null,
@@ -81,4 +81,4 @@ if __name__ == '__main__':
         'final_workflow': None
     }
     result = understand_intent(test_state, llm)
-    print(result)
+    test_state.update(result)

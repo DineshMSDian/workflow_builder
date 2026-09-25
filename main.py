@@ -13,12 +13,13 @@ def main():
 
     state = {
         "messages": [],
-        "intent": "",
+        "user_intent": "",
         "extracted_info": {},
         "missing_fields": [],
         "questions_asked": [],
         "current_question": "",
         "uncertainty_flag": False,
+        "workflow_ready": False,
         "final_workflow": None
     }
     

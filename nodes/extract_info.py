@@ -1,16 +1,16 @@
 from graphs.state_schema import WorkflowState
 
 ALL_REQUIRED_FIELDS = [
-    'trigger_source', 'trigger_event', 'condition', 'action', 'destintaion', 'notification_channel', 'duplicate_handling'
+    'trigger_source', 'trigger_event', 'condition', 'action', 'destination', 'notification_channel', 'duplicate_handling'
 ]
 
 def extract_info(state: WorkflowState):
     available_info = state['extracted_info']
     missing_fields = []
 
-    for filed in ALL_REQUIRED_FIELDS:
-        if available_info.get(filed) is None:
-            missing_fields.append(filed)
+    for field in ALL_REQUIRED_FIELDS:
+        if available_info.get(field) is None:
+            missing_fields.append(field)
 
     return {'missing_fields': missing_fields}
 
@@ -54,6 +54,6 @@ if __name__ == '__main__':
         'final_workflow': None
     }
     result = understand_intent(test_state, llm)
-    print(result)
-    missing_fileds = extract_info(test_state)
-    print(missing_fileds)
+    test_state.update(result)           # merge intent + extracted_info back in
+    missing_fields = extract_info(test_state)
+    print(missing_fields)
