@@ -23,7 +23,7 @@ def build_graph(llm):
     graph.add_edge('understand_intent', 'extract_info')
     graph.add_conditional_edges('extract_info', check_missing_info)
     graph.add_edge('ask_clarification', 'process_clarification_response')
-    graph.add_conditional_edges('preocess_clarification_response', check_uncertainty)
+    graph.add_conditional_edges('preprocess_clarification_response', check_uncertainty)
     graph.add_edge('generate_workflow', END)
 
     return graph.compile()
