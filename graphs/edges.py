@@ -1,6 +1,6 @@
 from graphs.state_schema import WorkflowState
 
-def checking_missing_info(state: WorkflowState) -> str:
+def check_missing_info(state: WorkflowState) -> str:
     if state['missing_fields']:
         return 'ask_clarification'
 
