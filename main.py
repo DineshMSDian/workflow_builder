@@ -41,7 +41,7 @@ def chat(user_input, messages, llm):
 
     messages.append(HumanMessage(user_input))
     response = llm.invoke(messages)
-    messages.append(response.content)
+    messages.append(response)
     return response.content, messages
 
 def is_workflow_ready(response) -> bool:
