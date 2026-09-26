@@ -1,0 +1,78 @@
+name: Build & Deploy to Azure Container Apps
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout repository ──
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # ── 2. Log in to Azure ──
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ── 3. Log in to Azure Container Registry (ACR) ──
+      - name: Log in to ACR
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io
+          username: ${{ secrets.AZURE_ACR_USERNAME }}
+          password: ${{ secrets.AZURE_ACR_PASSWORD }}
+
+      # ── 4. Build and Push Backend Image ──
+      - name: Build & Push Backend Container
+        run: |
+          ACR_REGISTRY="${{ secrets.AZURE_ACR_NAME }}.azurecr.io"
+          BACKEND_IMAGE="$ACR_REGISTRY/workflow-backend:${{ github.sha }}"
+          BACKEND_LATEST="$ACR_REGISTRY/workflow-backend:latest"
+          
+          docker build -f Dockerfile.backend -t $BACKEND_IMAGE -t $BACKEND_LATEST .
+          docker push $BACKEND_IMAGE
+          docker push $BACKEND_LATEST
+
+      # ── 5. Build and Push Frontend Image ──
+      - name: Build & Push Frontend Container
+        run: |
+          ACR_REGISTRY="${{ secrets.AZURE_ACR_NAME }}.azurecr.io"
+          FRONTEND_IMAGE="$ACR_REGISTRY/workflow-frontend:${{ github.sha }}"
+          FRONTEND_LATEST="$ACR_REGISTRY/workflow-frontend:latest"
+          
+          docker build \
+            --build-arg VITE_API_URL="${{ secrets.BACKEND_URL }}" \
+            -f frontend/Dockerfile.frontend \
+            -t $FRONTEND_IMAGE \
+            -t $FRONTEND_LATEST \
+            ./frontend
+
+          docker push $FRONTEND_IMAGE
+          docker push $FRONTEND_LATEST
+
+      # ── 6. Deploy Backend Container App ──
+      - name: Deploy Backend Container App
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          containerAppName: ${{ secrets.AZURE_BACKEND_APP_NAME }}
+          imageToDeploy: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io/workflow-backend:${{ github.sha }}
+
+      # ── 7. Deploy Frontend Container App ──
+      - name: Deploy Frontend Container App
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          containerAppName: ${{ secrets.AZURE_FRONTEND_APP_NAME }}
+          imageToDeploy: ${{ secrets.AZURE_ACR_NAME }}.azurecr.io/workflow-frontend:${{ github.sha }}
