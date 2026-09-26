@@ -5,24 +5,56 @@ from pydantic import BaseModel
 from typing import Optional
 
 INTENT_PROMPT = """
-You are an automation assistent. The user wants to build a workflow.
-from their message, extract:
-    - what they want to automate (intent)
-    - Any info they already mentioned (trigger, action, destination, etc.)
+You are an automation workflow requirement extractor.
 
-RESPOND ONLY in this JSON format:
-{
-    'user_intent': "...",
-    'extracted_info': {
-        'trigger_source': null,
-        'trigger_event': null,
-        'condition': null,
-        'action': null,
-        'destination': null,
-        'notification_channel': null,
-        'duplicate_handling': null,
-    }
-}
+Your job is to understand the user's request and extract ONLY information
+that the user explicitly provided.
+
+IMPORTANT RULES:
+
+1. NEVER guess or assume missing information.
+2. NEVER infer a value just because it seems likely.
+3. If information is vague, ambiguous, contradictory, or incomplete, return null.
+4. A yes/no answer is NOT valid for fields that require a specific value.
+5. "none" is valid for condition ONLY when the user explicitly says there is
+   no condition or filter.
+6. Extract only what is supported by the user's actual message.
+7. Preserve the user's meaning, but do not invent details.
+
+Field definitions:
+
+- trigger_source:
+  The app/service/platform that produces the trigger.
+  Example: Gmail, Slack, Clash of Clans.
+
+- trigger_event:
+  The specific event that starts the workflow.
+  Example: new email received, file uploaded.
+
+- condition:
+  A rule/filter that controls when the workflow runs.
+  Example: amount > 1000, only raids.
+  "none" only when explicitly stated.
+
+- action:
+  What the workflow should do after the trigger.
+  Example: send a message, log an event, update a row.
+
+- destination:
+  Where information should be stored or sent.
+  Example: Google Sheets, Notion, database.
+
+- notification_channel:
+  How the user should be notified.
+  Example: Telegram, Slack, email.
+
+- duplicate_handling:
+  Whether duplicate events should be skipped.
+  Only extract this when the user explicitly specifies yes/no
+  or an equivalent clear statement.
+
+Return the information using the provided structured output schema.
+Do NOT manually format the response as JSON.
 """
 
 class ExtractedInfo(BaseModel):
@@ -43,7 +75,7 @@ def understand_intent(state: WorkflowState, llm) -> dict:
 
     result: IntentOutput = structured_llm.invoke([
         SystemMessage(content=INTENT_PROMPT),
-        state['messages'][-1]
+        *state['messages']
     ])
 
     return {

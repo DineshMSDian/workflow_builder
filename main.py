@@ -5,10 +5,39 @@ from graphs.builder import build_graph
 from graphs.state_schema import WorkflowState
 from typing import cast
 from dotenv import load_dotenv
+import json
 
 from configs import MODEL
 
 load_dotenv()
+
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+
+FIELD_LABELS = {
+    'trigger_source': 'Trigger Source',
+    'trigger_event': 'Trigger Event',
+    'condition': 'Condition',
+    'action': 'Action',
+    'destination': 'Destination',
+    'notification_channel': 'Notification Channel',
+    'duplicate_handling': 'Duplicate Handling',
+}
+
+def print_state_table(state):
+    extracted = state.get('extracted_info', {})
+    missing = state.get('missing_fields', [])
+    print("\n  --- Collected Information ---")
+    for field, label in FIELD_LABELS.items():
+        value = extracted.get(field)
+        marker = '[x]' if value else '[ ]'
+        print(f"  {marker} {label}: {value or '-'}")
+    filled = sum(1 for v in extracted.values() if v is not None)
+    total = len(FIELD_LABELS)
+    status = f"  Status: {filled}/{total} fields collected"
+    if not missing:
+        status += " -- Ready to generate!"
+    print(status + "\n")
 
 def main():
     llm = ChatOpenAI(model=MODEL, temperature=0.2)
@@ -32,8 +61,11 @@ def main():
     }, config))
 
     while True:
+        print_state_table(state)
+
         if state["final_workflow"]:
-            print("\nDone:", state["final_workflow"])
+            print("[OK] Workflow Generated!")
+            print(json.dumps(state["final_workflow"], indent=2))
             break
 
         print(f"Bot: {state['messages'][-1].content}")
