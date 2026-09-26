@@ -2,7 +2,21 @@
 
 > **Describe your automation in plain English. The AI asks the right questions, then renders a live blueprint workflow diagram — instantly.**
 
-![Demo](./demo.webp)
+<video src="./workflow_builder_DEMO.mp4" controls width="100%"></video>
+
+> 📽️ **[▶ Watch Demo Video](./workflow_builder_DEMO.mp4)** — See the full conversational flow from plain-English description to live workflow canvas.
+
+---
+
+## 🌐 Live Demo
+
+> **Try it now — running 24/7 on Azure Cloud:**
+
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Azure%20Cloud-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://ca-frontend.kindrock-91ecbb54.southindia.azurecontainerapps.io/)
+
+**[https://ca-frontend.kindrock-91ecbb54.southindia.azurecontainerapps.io/](https://ca-frontend.kindrock-91ecbb54.southindia.azurecontainerapps.io/)**
+
+Deployed on **Azure Container Apps** (South India region) — no setup needed, open the link and start building workflows instantly.
 
 ---
 
@@ -18,36 +32,86 @@
 - 🔍 **Smart Validation** — The agent refuses vague or non-sensical answers (e.g. "my pocket" as a trigger source) and re-asks with helpful context
 - 🔁 **Session Reset** — Start a fresh workflow any time with one click
 - 🐳 **Docker Ready** — Full `docker-compose` setup for both services
+- ☁️ **Azure Cloud Deployed** — CI/CD via GitHub Actions → Azure Container Registry → Azure Container Apps
 
 ---
 
 ## 🏗️ Architecture
 
+### 1. LangGraph Agent — Graph Flow
+
+```mermaid
+flowchart TD
+    START(["⬛ START"])
+    UI(["👤 User Message"])
+    A["🧠 understand_intent\nExtract fields from first message\nvia structured LLM call"]
+    B["🔍 extract_info\nCheck which of the 7 required\nfields are still missing"]
+    C{"Missing\nfields?"}
+    D["❓ ask_clarification\nGenerate targeted question\nfor next missing field"]
+    E["✅ process_clarification_response\nValidate user answer;\nset uncertainty_flag if vague"]
+    F{"Answer\nuncertain?"}
+    G["🗺️ generate_workflow\nAssemble node/edge JSON\nfor React Flow canvas"]
+    END(["🏁 END\n→ Return workflow JSON"])
+
+    START --> UI --> A
+    A --> B
+    B --> C
+    C -- "fields missing" --> D
+    C -- "all fields collected" --> G
+    D -- "interrupt: wait for user reply" --> E
+    E --> F
+    F -- "yes: re-ask" --> D
+    F -- "no: re-check" --> B
+    G --> END
+
+    style START fill:#1e1e2e,color:#cdd6f4,stroke:#45475a
+    style END fill:#1e1e2e,color:#a6e3a1,stroke:#45475a
+    style D fill:#313244,color:#cba6f7,stroke:#cba6f7
+    style E fill:#313244,color:#f38ba8,stroke:#f38ba8
+    style G fill:#313244,color:#a6e3a1,stroke:#a6e3a1
+    style A fill:#313244,color:#89b4fa,stroke:#89b4fa
+    style B fill:#313244,color:#89dceb,stroke:#89dceb
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    React Frontend (Vite)                 │
-│  ┌─────────────────────┐   ┌──────────────────────────┐ │
-│  │   Chat Panel        │   │   Workflow Canvas         │ │
-│  │  - Message history  │   │  - React Flow / @xyflow  │ │
-│  │  - Info checklist   │   │  - Auto dagre layout     │ │
-│  │  - Input / Reset    │   │  - Blueprint background  │ │
-│  └─────────────────────┘   └──────────────────────────┘ │
-└──────────────────────┬──────────────────────────────────┘
-                       │ REST (POST /api/chat)
-┌──────────────────────▼──────────────────────────────────┐
-│                 FastAPI Backend (Python)                  │
-│   ┌─────────────────────────────────────────────────┐   │
-│   │             LangGraph Agent Graph               │   │
-│   │                                                 │   │
-│   │  understand_intent → extract_info               │   │
-│   │       ↓ (missing fields?)                       │   │
-│   │  ask_clarification ←→ process_clarification     │   │
-│   │       ↓ (all fields collected)                  │   │
-│   │  generate_workflow  →  END                      │   │
-│   └─────────────────────────────────────────────────┘   │
-│   LLM: OpenRouter (Gemini 2.5 Flash Lite)               │
-│   Memory: LangGraph MemorySaver (per thread_id)         │
-└─────────────────────────────────────────────────────────┘
+
+---
+
+### 2. Full System + Deployment Architecture
+
+```
+ ╔══════════════════════════════════════════════════════════════════╗
+ ║              GitHub Actions CI/CD Pipeline                       ║
+ ║  push → main                                                     ║
+ ║    ├─ docker build  Dockerfile.backend  → workflow-backend:sha   ║
+ ║    ├─ docker build  Dockerfile.frontend → workflow-frontend:sha  ║
+ ║    ├─ docker push   → Azure Container Registry (ACR)            ║
+ ║    ├─ az containerapp update → ca-backend  (port 8000)           ║
+ ║    └─ az containerapp update → ca-frontend (port 80)            ║
+ ╚══════════════════════════════════════════════════════════════════╝
+                               │
+              ┌────────────────┴─────────────────┐
+              ▼                                   ▼
+ ┌─────────────────────────┐       ┌──────────────────────────────┐
+ │  Azure Container App    │       │  Azure Container App         │
+ │  ca-frontend (nginx)    │       │  ca-backend  (FastAPI)       │
+ │  ─────────────────────  │       │  ────────────────────────    │
+ │  React 19 + Vite        │       │  Python 3.12 + uvicorn       │
+ │  ┌─────────────────┐    │  REST │  ┌────────────────────────┐  │
+ │  │  Chat Panel     │    │──────▶│  │  LangGraph Agent Graph │  │
+ │  │  - History      │    │POST   │  │  ─────────────────────  │  │
+ │  │  - Checklist    │    │/api/  │  │  understand_intent      │  │
+ │  │  - Reset btn    │    │chat   │  │  extract_info           │  │
+ │  └─────────────────┘    │       │  │  ask_clarification      │  │
+ │  ┌─────────────────┐    │◀──────│  │  process_clarification  │  │
+ │  │ Workflow Canvas  │    │JSON   │  │  generate_workflow      │  │
+ │  │ React Flow      │    │resp.  │  └────────────────────────┘  │
+ │  │ dagre layout    │    │       │  MemorySaver (per thread_id) │
+ │  └─────────────────┘    │       │  OpenRouter → Gemini 2.5    │
+ └─────────────────────────┘       └──────────────────────────────┘
+              │                                   │
+              └────────────────┬─────────────────┘
+                               ▼
+                  Azure Container Apps Environment
+                  (South India region · 24/7 uptime)
 ```
 
 ### Agent Graph Nodes
