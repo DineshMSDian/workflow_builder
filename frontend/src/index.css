@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    @apply bg-[#141413] text-[#f4f3ee] antialiased overflow-hidden m-0 p-0 h-screen w-screen;
+  }
+}
+
+/* ── Claude-style Warm Scrollbars ── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: rgba(218, 119, 86, 0.25); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(218, 119, 86, 0.45); }
+
+/* ── React Flow overrides ── */
+.react-flow__attribution { display: none !important; }
+
+.react-flow__controls {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+.react-flow__controls-button {
+  background: #ffffff !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #475569 !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+.react-flow__controls-button:hover {
+  background: #f8fafc !important;
+  color: #da7756 !important;
+}
+.react-flow__controls-button svg {
+  max-width: 15px !important;
+  max-height: 15px !important;
+}
+
+/* ── Edge default stroke ── */
+.react-flow__edge-path {
+  stroke-width: 2.5px !important;
+}
+
+/* ── Smooth edge labels ── */
+.react-flow__edge-textwrapper {
+  pointer-events: none;
+}
