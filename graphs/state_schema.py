@@ -9,6 +9,7 @@ class WorkflowState(TypedDict):
     missing_fields: List[str]
     questions_asked: List[str]
     current_question: str
+    current_field: Optional[str]        
     uncertainty_flag: bool
-    workflow_ready: bool
+    uncertainty_reason: Optional[str]   
     final_workflow: Optional[Dict]

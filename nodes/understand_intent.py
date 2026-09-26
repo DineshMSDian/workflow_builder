@@ -20,7 +20,7 @@ RESPOND ONLY in this JSON format:
         'action': null,
         'destination': null,
         'notification_channel': null,
-        duplicate_handling': null,
+        'duplicate_handling': null,
     }
 }
 """
@@ -76,9 +76,10 @@ if __name__ == '__main__':
         'missing_fields': [],
         'questions_asked': [],
         'current_question': '',
+        'current_field': '',
         'uncertainty_flag': False,
-        'workflow_ready': False,
-        'final_workflow': None
+        'uncertainty_reason': '',
+        'final_workflow': None,
     }
     result = understand_intent(test_state, llm)
     test_state.update(result)

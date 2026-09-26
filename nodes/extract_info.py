@@ -49,9 +49,10 @@ if __name__ == '__main__':
         'missing_fields': [],
         'questions_asked': [],
         'current_question': '',
+        'current_field': '',
         'uncertainty_flag': False,
-        'workflow_ready': False,
-        'final_workflow': None
+        'uncertainty_reason': '',
+        'final_workflow': None,
     }
     result = understand_intent(test_state, llm)
     test_state.update(result)           # merge intent + extracted_info back in

@@ -1,4 +1,5 @@
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
 from graphs.state_schema import WorkflowState
 from graphs.edges import check_uncertainty, check_missing_info
 from nodes.understand_intent import understand_intent
@@ -25,5 +26,9 @@ def build_graph(llm):
     graph.add_edge('ask_clarification', 'process_clarification_response')
     graph.add_conditional_edges('process_clarification_response', check_uncertainty)
     graph.add_edge('generate_workflow', END)
-
-    return graph.compile()
+    
+    checkpointer = MemorySaver()
+    return graph.compile(
+        checkpointer=checkpointer,
+        interrupt_after=['ask_clarification']
+    )
