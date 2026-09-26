@@ -1,4 +1,4 @@
-from langchain.messages import SystemMessage, AIMessage
+from langchain_core.messages import SystemMessage, AIMessage
 
 
 FIELD_DESCRIPTIONS = {

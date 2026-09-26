@@ -88,8 +88,15 @@ def handle_chat(request: ChatRequest):
 
         # Check if workflow was generated
         if state.get("final_workflow"):
+            bot_message = ""
+            if state.get("messages"):
+                last_msg = state["messages"][-1]
+                bot_message = getattr(last_msg, "content", str(last_msg))
+            if not bot_message:
+                bot_message = "Workflow generated successfully!"
+
             return ChatResponse(
-                message=last_message if isinstance(last_message, str) else str(last_message),
+                message=bot_message if isinstance(bot_message, str) else str(bot_message),
                 status="complete",
                 workflow=state["final_workflow"],
                 extracted_info=state.get("extracted_info", {}),
@@ -100,7 +107,8 @@ def handle_chat(request: ChatRequest):
             # Still needs clarification
             bot_question = state.get("current_question")
             if not bot_question and state.get("messages"):
-                bot_question = state["messages"][-1].content
+                last_msg = state["messages"][-1]
+                bot_question = getattr(last_msg, "content", str(last_msg))
 
             return ChatResponse(
                 message=bot_question or "Could you clarify the next detail?",
