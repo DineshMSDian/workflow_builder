@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://ca-backend.kindrock-91ecbb54.southindia.azurecontainerapps.io';
 
 export async function sendMessage(message, threadId = 'default_session') {
   try {

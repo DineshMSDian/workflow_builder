@@ -25,7 +25,10 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow Vite dev server and local clients
+    allow_origins=[
+        "https://ca-frontend.kindrock-91ecbb54.southindia.azurecontainerapps.io",
+        "http://localhost:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -86,7 +89,7 @@ def handle_chat(request: ChatRequest):
         # Check if workflow was generated
         if state.get("final_workflow"):
             return ChatResponse(
-                message=state["messages"][-1].content if state.get("messages") else "Workflow ready!",
+                message=last_message if isinstance(last_message, str) else str(last_message),
                 status="complete",
                 workflow=state["final_workflow"],
                 extracted_info=state.get("extracted_info", {}),
